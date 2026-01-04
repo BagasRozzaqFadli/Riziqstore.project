@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Kantin Order</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .payment-category {
+            margin-bottom: 24px;
+        }
+
+        .payment-category h4 {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .payment-method {
+            cursor: pointer;
+        }
+
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+
+        .method-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .payment-method input:checked+.method-card {
+            border-color: var(--primary-color);
+            background: #f0f8ff;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+        }
+
+        .method-card:hover {
+            border-color: #999;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .method-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .method-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .method-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .method-fee {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- QR Code Library for QRIS -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Site Header with Logo -->
+        <div class="site-header">
+            <img src="images/logo.png" alt="Riziqstore Logo" class="logo">
+            <div class="brand-name">Riziqstore.idn</div>
+        </div>
+
+        <div class="card">
+            <h2>Checkout</h2>
+            <p>Lengkapi data untuk menyelesaikan pesanan</p>
+        </div>
+
+        <div class="card">
+            <h3>Informasi Customer</h3>
+            <form id="checkoutForm" onsubmit="submitOrder(event)">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Nama</label>
+                    <input type="text" id="customerName" class="input-field" required placeholder="Nama Anda">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">No. Handphone</label>
+                    <input type="tel" id="customerPhone" class="input-field" required placeholder="08123456789">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Nomor Meja</label>
+                    <input type="text" id="tableNumber" class="input-field" required placeholder="Nomor meja Anda">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Catatan (opsional)</label>
+                    <textarea id="customerNotes" class="input-field" rows="3"
+                        placeholder="Contoh: Pedas sedang, tanpa cabe"></textarea>
+                </div>
+
+                <!-- Payment Method Selection - MOVED HERE -->
+                <div style="margin-bottom: 24px; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 1.1rem;">Metode Pembayaran</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0 0 16px 0;">Pilih metode pembayaran Anda</p>
+
+                    <div id="paymentMethodError"
+                        style="display: none; color: #dc3545; padding: 12px; background: #f8d7da; border-radius: 8px; margin-bottom: 16px;">
+                        Silakan pilih metode pembayaran
+                    </div>
+
+                    <!-- E-Wallet -->
+                    <div class="payment-category">
+                        <h4>E-Wallet</h4>
+                        <div class="payment-methods">
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="gopay" data-fee-type="percentage"
+                                    data-fee-value="0.02">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #00AA13;">
+                                        <span style="color: white; font-weight: bold;">Go</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">GoPay</div>
+                                        <div class="method-fee">Biaya: 2%</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="qris" data-fee-type="percentage"
+                                    data-fee-value="0.007">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #FF6B00;">
+                                        <span style="color: white; font-weight: bold;">QR</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">QRIS</div>
+                                        <div class="method-fee">Biaya: 0.7%</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Virtual Account -->
+                    <div class="payment-category">
+                        <h4>Transfer Bank (Virtual Account)</h4>
+                        <div class="payment-methods">
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="bsi" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #1C5AA8;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.7rem;">BSI</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">BSI Virtual Account</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="cimb" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #BB0000;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.6rem;">CIMB</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">CIMB Niaga VA</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="bni" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #EC6D23;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.7rem;">BNI</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">BNI Virtual Account</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="bri" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #003D79;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.7rem;">BRI</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">BRI Virtual Account</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="mandiri" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #003D79;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.6rem;">MDR</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">Bank Mandiri VA</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-method">
+                                <input type="radio" name="paymentMethod" value="permata" data-fee-type="flat"
+                                    data-fee-value="4000">
+                                <div class="method-card">
+                                    <div class="method-icon" style="background: #7AB344;">
+                                        <span style="color: white; font-weight: bold; font-size: 0.6rem;">PRMT</span>
+                                    </div>
+                                    <div class="method-info">
+                                        <div class="method-name">Permata VA</div>
+                                        <div class="method-fee">Biaya: Rp 4.000</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary - MOVED INSIDE FORM -->
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 1.1rem; margin-bottom: 12px;">Ringkasan Pesanan</h4>
+                    <div id="orderSummary"></div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border-color); font-size: 1.2rem; font-weight: 600;">
+                        <span>Total:</span>
+                        <span id="totalPrice" style="color: var(--primary-color);"></span>
+                    </div>
+                </div>
+
+                <div id="error" class="error-message" style="display: none;"></div>
+                <div id="success" class="success-message" style="display: none;"></div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
+                    Buat Pesanan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/invoice-service.js"></script>
+    <script src="js/payment.js"></script>
+    <script>
+        const tenantCode = getCurrentTenant();
+
+        if (!tenantCode) {
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const cart = Cart.get(tenantCode);
+            if (cart.length === 0) {
+                window.location.href = `menu.html?tenant=${tenantCode}`;
+                return;
+            }
+
+            renderOrderSummary();
+
+            // Add event listeners to payment methods for real-time fee calculation
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    renderOrderSummary();
+                    // Hide error message if shown
+                    document.getElementById('paymentMethodError').style.display = 'none';
+                });
+            });
+
+            // Create payment section
+            const paymentSection = document.createElement('div');
+            paymentSection.id = 'paymentSection';
+            paymentSection.className = 'card';
+            paymentSection.style.display = 'none';
+            paymentSection.innerHTML = `
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="background: #d4edda; color: #155724; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <h3 style="margin: 0 0 8px 0;">✅ Pesanan Berhasil Dibuat!</h3>
+                        <p style="margin: 0;">Nomor Invoice: <strong id="confirmInvoice">-</strong></p>
+                    </div>
+                </div>
+                
+                <h4 style="margin-bottom: 16px;">Detail Pesanan</h4>
+                <div id="confirmOrderSummary" style="margin-bottom: 16px;"></div>
+                
+                <div style="border-top: 2px solid var(--border-color); padding-top: 16px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #666;">Subtotal Menu:</span>
+                        <span id="confirmSubtotal" style="font-weight: 600;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #666;">Biaya Admin (<span id="confirmPaymentMethod">-</span>):</span>
+                        <span id="confirmFee" style="font-weight: 600; color: #e67e22;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; color: var(--primary-color);">
+                        <span>Total:</span>
+                        <span id="confirmTotal">-</span>
+                    </div>
+                </div>
+                
+                <h4 style="margin-bottom: 12px;">Pembayaran</h4>
+                <p style="color: #666; margin-bottom: 16px;">Silakan pilih opsi pembayaran:</p>
+                <button onclick="proceedToPayment()" id="payBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
+                    💳 Bayar Sekarang
+                </button>
+                <button onclick="skipPayment()" class="btn" style="width: 100%; background: #6c757d; color: white;">
+                    Bayar Nanti (Lihat Pesanan)
+                </button>
+            `;
+            document.querySelector('.container').appendChild(paymentSection);
+        });
+
+        function calculateAdminFee(subtotal) {
+            const selected = document.querySelector('input[name="paymentMethod"]:checked');
+
+            if (!selected) return 0;
+
+            const feeType = selected.dataset.feeType;
+
+            if (feeType === 'flat') {
+                return parseInt(selected.dataset.feeValue);
+            }
+
+            if (feeType === 'percentage') {
+                return Math.ceil(subtotal * parseFloat(selected.dataset.feeValue));
+            }
+
+            if (feeType === 'mixed') {
+                const percentage = parseFloat(selected.dataset.feePercentage);
+                const fixed = parseInt(selected.dataset.feeFixed);
+                return Math.ceil(subtotal * percentage) + fixed;
+            }
+
+            return 0;
+        }
+
+        function renderOrderSummary() {
+            const cart = Cart.get(tenantCode);
+            const summaryDiv = document.getElementById('orderSummary');
+            const subtotal = Cart.getTotal(tenantCode);
+            const adminFee = calculateAdminFee(subtotal);
+            const total = subtotal + adminFee;
+
+            // Render cart items
+            summaryDiv.innerHTML = cart.map(item => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 500;">${item.product_name}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">${item.quantity}x ${formatRupiah(item.price)}</div>
+                    </div>
+                    <div style="font-weight: 600;">${formatRupiah(item.price * item.quantity)}</div>
+                </div>
+            `).join('');
+
+            // Add subtotal and admin fee breakdown if method selected
+            if (adminFee > 0) {
+                const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+                const methodName = selectedMethod ? selectedMethod.parentElement.querySelector('.method-name').textContent : 'Payment';
+
+                summaryDiv.innerHTML += `
+                    <div style="border-top: 1px solid #e0e0e0; margin: 12px 0; padding-top: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #666;">
+                            <span>Subtotal Menu</span>
+                            <span>${formatRupiah(subtotal)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #e67e22; font-weight: 500;">
+                            <span>Biaya Admin (${methodName})</span>
+                            <span>${formatRupiah(adminFee)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('totalPrice').textContent = formatRupiah(total);
+        }
+
+        async function submitOrder(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+
+            // Hide messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            // Get form data
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+            const tableNumber = document.getElementById('tableNumber').value.trim();
+            const customerNotes = document.getElementById('customerNotes').value.trim();
+
+            // Validate payment method selected
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!selectedPaymentMethod) {
+                errorDiv.textContent = 'Silakan pilih metode pembayaran terlebih dahulu';
+                errorDiv.style.display = 'block';
+                document.getElementById('paymentMethodError').style.display = 'block';
+                document.getElementById('paymentMethodError').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            const paymentMethod = selectedPaymentMethod.value;
+
+            // Get cart
+            const cart = Cart.get(tenantCode);
+            const subtotal = Cart.getTotal(tenantCode);
+            const adminFee = calculateAdminFee(subtotal);
+            const total = subtotal + adminFee;
+
+            // Show loading
+            submitBtn.textContent = 'Membuat pesanan...';
+            submitBtn.disabled = true;
+
+            try {
+                // Get tenant ID from tenant code
+                const tenantResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.tenants,
+                    [
+                        Appwrite.Query.equal('tenant_code', tenantCode),
+                        Appwrite.Query.limit(1)
+                    ]
+                );
+
+                if (tenantResponse.documents.length === 0) {
+                    throw new Error('Tenant tidak ditemukan');
+                }
+
+                const tenantId = tenantResponse.documents[0].$id;
+
+                // Generate unique invoice
+                const invoice = await generateUniqueInvoice(databases);
+
+                // Prepare order data
+                const orderData = {
+                    invoice_number: invoice,
+                    tenant_id: tenantId,
+                    tenant_code: tenantCode,
+                    customer_name: customerName,
+                    customer_phone: customerPhone,
+                    table_number: tableNumber,
+                    customer_notes: customerNotes || null,
+                    items: JSON.stringify(cart),
+                    total_price: total,
+                    admin_fee: adminFee,
+                    payment_type: paymentMethod,
+                    order_status: 'pending'
+                };
+
+                // Create order
+                const orderDoc = await createOrder(orderData);
+
+                // Clear cart
+                Cart.clear(tenantCode);
+
+                // Save order ID for payment
+                sessionStorage.setItem('currentOrderId', orderDoc.$id);
+                sessionStorage.setItem('currentInvoice', invoice);
+                sessionStorage.setItem('currentTotal', total.toString());
+
+                // Hide form and old messages
+                document.getElementById('checkoutForm').style.display = 'none';
+                successDiv.style.display = 'none'; // Hide old success message
+                errorDiv.style.display = 'none';
+
+                // Show payment section with order details
+                document.getElementById('paymentSection').style.display = 'block';
+
+                // Populate order confirmation details
+                document.getElementById('confirmInvoice').textContent = invoice;
+
+                // Populate order items
+                const confirmSummaryDiv = document.getElementById('confirmOrderSummary');
+                confirmSummaryDiv.innerHTML = cart.map(item => `
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px;">
+                        <div>
+                            <div style="font-weight: 600; color: #333;">${item.product_name}</div>
+                            <div style="font-size: 0.9rem; color: #666;">${item.quantity}x ${formatRupiah(item.price)}</div>
+                        </div>
+                        <div style="font-weight: 600; color: #333;">${formatRupiah(item.price * item.quantity)}</div>
+                    </div>
+                `).join('');
+
+                // Populate totals
+                const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+                const methodName = selectedMethod.parentElement.querySelector('.method-name').textContent;
+
+                document.getElementById('confirmSubtotal').textContent = formatRupiah(subtotal);
+                document.getElementById('confirmPaymentMethod').textContent = methodName;
+                document.getElementById('confirmFee').textContent = formatRupiah(adminFee);
+                document.getElementById('confirmTotal').textContent = formatRupiah(total);
+
+                // Store payment method for later use
+                sessionStorage.setItem('currentPaymentMethod', paymentMethod);
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = error.message || 'Gagal membuat pesanan. Silakan coba lagi.';
+                errorDiv.style.display = 'block';
+                submitBtn.textContent = 'Buat Pesanan';
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function proceedToPayment() {
+            const payBtn = document.getElementById('payBtn');
+            const errorDiv = document.getElementById('error');
+
+            if (!payBtn) {
+                alert('Error: Payment button not found');
+                return;
+            }
+
+            payBtn.textContent = 'Memproses...';
+            payBtn.disabled = true;
+
+            try {
+                const invoiceNumber = sessionStorage.getItem('currentInvoice');
+                const totalAmount = parseInt(sessionStorage.getItem('currentTotal'));
+                const paymentMethod = sessionStorage.getItem('currentPaymentMethod');
+
+                if (!invoiceNumber || !totalAmount || !paymentMethod) {
+                    throw new Error('Data pembayaran tidak lengkap.');
+                }
+
+                // Create payment with Core API - will handle different payment types
+                await createPayment(invoiceNumber, totalAmount, paymentMethod);
+
+            } catch (error) {
+                // Only show error if redirect didn't happen
+                if (!error.message.includes('redirect')) {
+                    alert('Gagal memproses pembayaran: ' + error.message);
+                    errorDiv.textContent = 'Gagal memproses pembayaran: ' + error.message;
+                    errorDiv.style.display = 'block';
+                    errorDiv.scrollIntoView({ behavior: 'smooth' });
+                }
+                payBtn.textContent = 'Bayar Sekarang';
+                payBtn.disabled = false;
+            }
+        }
+
+        function skipPayment() {
+            const invoice = sessionStorage.getItem('currentInvoice');
+            sessionStorage.removeItem('currentOrderId');
+            sessionStorage.removeItem('currentInvoice');
+            window.location.href = `tracking.html?invoice=${invoice}`;
+        }
+    </script>
+</body>
+
+</html>
