@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request - Riziqstore</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Site Header with Logo -->
+        <div class="site-header">
+            <img src="images/logo.png" alt="Riziqstore Logo" class="logo">
+            <div class="brand-name">Riziqstore.idn</div>
+        </div>
+
+        <div class="card">
+            <h2>📝 Ajukan Request Produk</h2>
+            <p>Punya produk yang ingin Anda pesan? Sampaikan request Anda di sini!</p>
+        </div>
+
+        <div class="card">
+            <form id="requestForm">
+                <div style="margin-bottom: 20px;">
+                    <label for="userName"
+                        style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">
+                        Nama Anda <span style="color: var(--danger-color);">*</span>
+                    </label>
+                    <input type="text" id="userName" name="userName" class="input-field"
+                        placeholder="Masukkan nama Anda" required style="width: 100%;">
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label for="requestText"
+                        style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">
+                        Request Produk <span style="color: var(--danger-color);">*</span>
+                    </label>
+                    <textarea id="requestText" name="requestText" class="input-field"
+                        placeholder="Jelaskan produk yang Anda inginkan..." required rows="6"
+                        style="width: 100%;"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    🚀 Kirim Request
+                </button>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message" style="display: none; margin-top: 20px;">
+                ✅ Request berhasil dikirim! Terima kasih atas masukannya.
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none; margin-top: 20px;">
+                ❌ Gagal mengirim request. Silakan coba lagi.
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-section">
+            <div class="info-card">
+                <span class="icon">💡</span>
+                <h3>Tips Request</h3>
+                <p>Jelaskan detail produk yang Anda inginkan untuk respon yang lebih cepat</p>
+            </div>
+            <div class="info-card">
+                <span class="icon">⚡</span>
+                <h3>Respon Cepat</h3>
+                <p>Tim kami akan segera menanggapi request Anda</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon">&#127968;</span>
+            <span class="nav-label">Beranda</span>
+        </a>
+        <a href="menu.html" class="nav-item">
+            <span class="nav-icon">&#127869;</span>
+            <span class="nav-label">Produk</span>
+        </a>
+        <a href="request.html" class="nav-item active">
+            <span class="nav-icon">&#128172;</span>
+            <span class="nav-label">Request</span>
+        </a>
+        <a href="tracking.html" class="nav-item">
+            <span class="nav-icon">&#128230;</span>
+            <span class="nav-label">Lacak Pesanan</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        const tenantCode = getCurrentTenant();
+
+        if (tenantCode) {
+            // Update navigation links with tenant parameter
+            const navLinks = document.querySelectorAll('.bottom-nav a');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.includes('?') && !href.includes('index.html')) {
+                    link.setAttribute('href', `${href}?tenant=${tenantCode}`);
+                }
+            });
+        }
+
+        // Discord Webhook URL
+        const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1457398793333903577/ysjzJn8c4w7khnAleyAp3GX9tvjf2mmZwTJPq_-o2TtaYqcDmYBQPekpjd6CqJaikhu7';
+
+        // Form submission handler
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userName = document.getElementById('userName').value.trim();
+            const requestText = document.getElementById('requestText').value.trim();
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Hide previous messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Mengirim...';
+
+            try {
+                // Send to Discord webhook
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: `🔔 New Request Incoming! | User: ${userName} | Request : ${requestText}`
+                    })
+                });
+
+                if (response.ok || response.status === 204) {
+                    // Success
+                    successMsg.style.display = 'block';
+
+                    // Reset form
+                    document.getElementById('requestForm').reset();
+
+                    // Scroll to success message
+                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    // Reset button after delay
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '🚀 Kirim Request';
+                    }, 2000);
+                } else {
+                    throw new Error('Failed to send request');
+                }
+            } catch (error) {
+                console.error('Error sending request:', error);
+
+                // Show error message
+                errorMsg.style.display = 'block';
+                errorMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Kirim Request';
+            }
+        });
+    </script>
+</body>
+
+</html>
