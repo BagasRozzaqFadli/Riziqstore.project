@@ -12,7 +12,7 @@
 :root {
     /* Gradient Dream Colors */
     --bg-gradient: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 25%, #FFFFFF 100%);
-    --bg-card: rgba(255, 255, 255, 0.6);
+    --bg-card: rgba(255, 255, 255, 0.9);
     --bg-card-hover: rgba(255, 255, 255, 0.85);
 
     /* Primary Colors (from logo) */
