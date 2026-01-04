@@ -101,11 +101,11 @@
 
         <div class="card">
             <h2>Checkout</h2>
-            <p>Lengkapi data untuk menyelesaikan pesanan</p>
+            <p>Lengkapi data untuk menyelesaikan transaksi</p>
         </div>
 
         <div class="card">
-            <h3>Informasi Customer</h3>
+            <h3>Informasi Pembeli</h3>
             <form id="checkoutForm" onsubmit="submitOrder(event)">
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 500;">Nama</label>
@@ -118,14 +118,15 @@
                 </div>
 
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Nomor Meja</label>
-                    <input type="text" id="tableNumber" class="input-field" required placeholder="Nomor meja Anda">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">ID Akun / User ID</label>
+                    <input type="text" id="tableNumber" class="input-field" required
+                        placeholder="Contoh: 123456789 atau username">
                 </div>
 
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 500;">Catatan (opsional)</label>
                     <textarea id="customerNotes" class="input-field" rows="3"
-                        placeholder="Contoh: Pedas sedang, tanpa cabe"></textarea>
+                        placeholder="Contoh: Catatan tambahan untuk transaksi"></textarea>
                 </div>
 
                 <!-- Payment Method Selection - MOVED HERE -->
@@ -265,7 +266,7 @@
 
                 <!-- Order Summary - MOVED INSIDE FORM -->
                 <div style="margin-bottom: 24px;">
-                    <h4 style="font-size: 1.1rem; margin-bottom: 12px;">Ringkasan Pesanan</h4>
+                    <h4 style="font-size: 1.1rem; margin-bottom: 12px;">Ringkasan Transaksi</h4>
                     <div id="orderSummary"></div>
                     <div
                         style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border-color); font-size: 1.2rem; font-weight: 600;">
@@ -278,7 +279,7 @@
                 <div id="success" class="success-message" style="display: none;"></div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
-                    Buat Pesanan
+                    Proses Transaksi
                 </button>
             </form>
         </div>
@@ -322,17 +323,17 @@
             paymentSection.innerHTML = `
                 <div style="text-align: center; margin-bottom: 24px;">
                     <div style="background: #d4edda; color: #155724; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <h3 style="margin: 0 0 8px 0;">✅ Pesanan Berhasil Dibuat!</h3>
+                        <h3 style="margin: 0 0 8px 0;">✅ Transaksi Berhasil Dibuat!</h3>
                         <p style="margin: 0;">Nomor Invoice: <strong id="confirmInvoice">-</strong></p>
                     </div>
                 </div>
                 
-                <h4 style="margin-bottom: 16px;">Detail Pesanan</h4>
+                <h4 style="margin-bottom: 16px;">Detail Transaksi</h4>
                 <div id="confirmOrderSummary" style="margin-bottom: 16px;"></div>
                 
                 <div style="border-top: 2px solid var(--border-color); padding-top: 16px; margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: #666;">Subtotal Menu:</span>
+                        <span style="color: #666;">Subtotal Produk:</span>
                         <span id="confirmSubtotal" style="font-weight: 600;">-</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -351,7 +352,7 @@
                     💳 Bayar Sekarang
                 </button>
                 <button onclick="skipPayment()" class="btn" style="width: 100%; background: #6c757d; color: white;">
-                    Bayar Nanti (Lihat Pesanan)
+                    Bayar Nanti (Lihat Transaksi)
                 </button>
             `;
             document.querySelector('.container').appendChild(paymentSection);
@@ -407,7 +408,7 @@
                 summaryDiv.innerHTML += `
                     <div style="border-top: 1px solid #e0e0e0; margin: 12px 0; padding-top: 12px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #666;">
-                            <span>Subtotal Menu</span>
+                            <span>Subtotal Produk</span>
                             <span>${formatRupiah(subtotal)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; color: #e67e22; font-weight: 500;">
